@@ -1,7 +1,3 @@
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.sql.SQLOutput;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
@@ -16,10 +12,11 @@ public class Main {
         System.out.print("Enter the accuracy: ");
         double accuracy = scanner.nextDouble();
         scanner.nextLine();
-        Expression expression = new Expression("x^3-3x^2-14x-8", "3x^2-6x-14", "6x-6", a, b, accuracy);
+        Expression expression = new Expression("x^3-3x^2-14x-8", "3x^2-6x-14", "6x-6", a, b, accuracy, "(3x^2+14x+8)^(1.0/3)", "(6x+14)/(3*(3x^2+14x+8)^(2/3))");
         System.out.println(Methods.chordMethod(expression));
         System.out.println(Methods.newtonsMethod(expression));
         System.out.println(Methods.combinatedMethod(expression));
+        System.out.println(Methods.iterativeMethod(expression));
     }
 }
 
@@ -30,14 +27,19 @@ class Expression {
     private int a;
     private int b;
     private double accuracy;
+    private String iterationalExp;
+    private String derivativeIterationalExp;
 
-    public Expression(String expresion, String derivative, String secondDerivative, int a, int b, double accuracy) {
+
+    public Expression(String expresion, String derivative, String secondDerivative, int a, int b, double accuracy, String iterationalExp, String derivativeIterationalExp) {
         this.expresion = expresion;
         this.derivative = derivative;
         this.secondDerivative = secondDerivative;
         this.a = a;
         this.b = b;
         this.accuracy = accuracy;
+        this.iterationalExp = iterationalExp;
+        this.derivativeIterationalExp = derivativeIterationalExp;
     }
 
     public String getExpresion() {
@@ -83,6 +85,14 @@ class Expression {
     public double getAccuracy() {
         return accuracy;
     }
+
+    public String getIterationalExp() {
+        return iterationalExp;
+    }
+
+    public String getDerivativeIterationalExp() {
+        return derivativeIterationalExp;
+    }
 }
 
 class Methods {
@@ -100,15 +110,15 @@ class Methods {
 
         if (fafiia > 0 && fbfiib < 0) {//moving point is b
             xn = expression.getB();
-            while (replaceX(expression.getExpresion(), expression.getA()) * replaceX(expression.getExpresion(), xn) < 0){
-                xn = xn - (((expression.getA()-xn)*(replaceX(expression.getExpresion(), xn)))/(replaceX(expression.getExpresion(), expression.getA()) - replaceX(expression.getExpresion(), xn)));
+            while (replaceX(expression.getExpresion(), expression.getA()) * replaceX(expression.getExpresion(), xn) < 0) {
+                xn = xn - (((expression.getA() - xn) * (replaceX(expression.getExpresion(), xn))) / (replaceX(expression.getExpresion(), expression.getA()) - replaceX(expression.getExpresion(), xn)));
                 counter++;
                 System.out.println(xn);
             }
         } else if (fafiia < 0 && fbfiib > 0) {//moving point is a
             xn = expression.getA();
-            while (replaceX(expression.getExpresion(), xn) * replaceX(expression.getExpresion(), expression.getB()) < 0){
-                xn = xn - (((expression.getB()-xn)*(replaceX(expression.getExpresion(), xn)))/(replaceX(expression.getExpresion(), expression.getB()) - replaceX(expression.getExpresion(), xn)));
+            while (replaceX(expression.getExpresion(), xn) * replaceX(expression.getExpresion(), expression.getB()) < 0) {
+                xn = xn - (((expression.getB() - xn) * (replaceX(expression.getExpresion(), xn))) / (replaceX(expression.getExpresion(), expression.getB()) - replaceX(expression.getExpresion(), xn)));
                 counter++;
                 System.out.println(xn);
             }
@@ -173,15 +183,15 @@ class Methods {
         double fbfiib = replaceX(expression.getExpresion(), expression.getB()) * replaceX(expression.getSecondDerivative(), expression.getB());
 
         if (fafiia > 0) {//a - tangent method of Newton, b - chord method
-            while (replaceX(expression.getExpresion(), an) * replaceX(expression.getExpresion(), bn) < 0){
-                bn = bn - (((an-bn)*(replaceX(expression.getExpresion(), bn)))/(replaceX(expression.getExpresion(), an) - replaceX(expression.getExpresion(), bn)));
+            while (replaceX(expression.getExpresion(), an) * replaceX(expression.getExpresion(), bn) < 0) {
+                bn = bn - (((an - bn) * (replaceX(expression.getExpresion(), bn))) / (replaceX(expression.getExpresion(), an) - replaceX(expression.getExpresion(), bn)));
                 an = an - (replaceX(expression.getExpresion(), an) / replaceX(expression.getDerivative(), an)); // bn first because it depends from an and old version of an is needed
                 counter++;
                 System.out.println("[" + an + "; " + bn + "]");
             }
         } else if (fbfiib > 0) {//a - chord method, b - tangent method of Newton
-            while (replaceX(expression.getExpresion(), an) * replaceX(expression.getExpresion(), bn) < 0){
-                an = an - (((bn-an)*(replaceX(expression.getExpresion(), an)))/(replaceX(expression.getExpresion(), bn) - replaceX(expression.getExpresion(), an)));
+            while (replaceX(expression.getExpresion(), an) * replaceX(expression.getExpresion(), bn) < 0) {
+                an = an - (((bn - an) * (replaceX(expression.getExpresion(), an))) / (replaceX(expression.getExpresion(), bn) - replaceX(expression.getExpresion(), an)));
                 bn = bn - (replaceX(expression.getExpresion(), bn) / replaceX(expression.getDerivative(), bn));
                 counter++;
                 System.out.println("[" + an + "; " + bn + "]");
@@ -195,39 +205,220 @@ class Methods {
         return an;
     }
 
+    public static double iterativeMethod(Expression expression) {
+        if (expression == null) {
+            System.out.println("expression is null");
+            return -1;
+        }
+        System.out.println("The Iterative Method: ");
+
+        double xnminus1;
+        double xn = -1;
+        int counter = 0;
+
+        double countingValue = replaceX(expression.getDerivativeIterationalExp(), expression.getA());
+        if (countingValue > -1 && countingValue < 1) {
+            xn = expression.getA();
+        } else if (replaceX(expression.getDerivativeIterationalExp(), expression.getB()) > -1 && replaceX(expression.getDerivativeIterationalExp(), expression.getB()) < 1) {
+            xn = replaceX(expression.getDerivativeIterationalExp(), expression.getB());
+        } else {
+            System.out.println("xn is not found");
+            return -1;
+        }
+        do {
+            xnminus1 = xn;
+            xn = replaceX(expression.getIterationalExp(), xnminus1);
+            counter++;
+        } while (xnminus1 != xn);
+
+        System.out.println("Number of iterations by Newton's method = " + counter);
+        calculateAccuracy(xn, expression.getAccuracy());
+        return xn;
+    }
+
     public static double calculateAccuracy(double value, double accuracy) {
         return -1;
     }
 
     public static double replaceX(String expression, double x) {
-        double result = 0;
-        String expr = expression.replace("-", "+-"); // split easier by '+'
-        String[] terms = expr.split("\\+");
+        Parser p = new Parser(expression, x);
+        return p.parse();
+    }
 
-        for (String term : terms) {
-            if (term.isEmpty()) continue;
+    // --- внутрішній рекурсивний парсер ---
+    private static class Parser {
+        private final String s;
+        private final double xValue;
+        private int pos;
+        private final int len;
 
-            if (term.contains("x^")) {
-                // form: ax^b
-                String[] parts = term.split("x\\^");
-                int coeff = parts[0].isEmpty() || parts[0].equals("+") ? 1 : parts[0].equals("-") ? -1 : Integer.parseInt(parts[0]);
-                int power = Integer.parseInt(parts[1]);
-                result += coeff * Math.pow(x, power);
-            } else if (term.contains("x")) {
-                // form: ax
-                String coeffPart = term.replace("x", "");
-                int coeff = coeffPart.isEmpty() || coeffPart.equals("+") ? 1 : coeffPart.equals("-") ? -1 : Integer.parseInt(coeffPart);
-                result += coeff * x;
-            } else {
-                // just a number
-                result += Integer.parseInt(term);
-            }
+        Parser(String expr, double x) {
+            this.s = expr;
+            this.xValue = x;
+            this.pos = 0;
+            this.len = s.length();
         }
-        return result;
+
+        double parse() {
+            double value = parseExpression();
+            skipWhitespace();
+            if (pos < len) throw new RuntimeException("Unexpected char at pos " + pos + ": '" + peek() + "'");
+            return value;
+        }
+
+        // Expression := Term { ('+'|'-') Term }
+        private double parseExpression() {
+            double value = parseTerm();
+            while (true) {
+                skipWhitespace();
+                char c = peek();
+                if (c == '+') { pos++; value += parseTerm(); }
+                else if (c == '-') { pos++; value -= parseTerm(); }
+                else break;
+            }
+            return value;
+        }
+
+        // Term := Factor { ('*'|'/' | implicit-mul) Factor }
+        private double parseTerm() {
+            double value = parseFactor();
+            while (true) {
+                skipWhitespace();
+                char c = peek();
+                if (c == '*') {
+                    pos++;
+                    value *= parseFactor();
+                } else if (c == '/') {
+                    pos++;
+                    value /= parseFactor();
+                } else {
+                    // check for implicit multiplication: next token starts with '(' or 'x' or digit or '.'
+                    if (c == '(' || c == 'x' || Character.isDigit(c) || c == '.') {
+                        // treat as multiplication
+                        value *= parseFactor();
+                    } else break;
+                }
+            }
+            return value;
+        }
+
+        // Factor := Unary { '^' Factor }   (right-associative)
+        private double parseFactor() {
+            double value = parseUnary();
+            skipWhitespace();
+            if (peek() == '^') {
+                pos++;
+                double exponent = parseFactor(); // right-associative
+                value = Math.pow(value, exponent);
+            }
+            return value;
+        }
+
+        // Unary := ('+'|'-') Unary | Primary
+        private double parseUnary() {
+            skipWhitespace();
+            char c = peek();
+            if (c == '+') { pos++; return parseUnary(); }
+            if (c == '-') { pos++; return -parseUnary(); }
+            return parsePrimary();
+        }
+
+        // Primary := number | 'x' | '(' Expression ')'
+        private double parsePrimary() {
+            skipWhitespace();
+            char c = peek();
+            if (c == '(') {
+                pos++;
+                double val = parseExpression();
+                skipWhitespace();
+                if (peek() != ')') throw new RuntimeException("Missing closing ) at pos " + pos);
+                pos++;
+                return val;
+            }
+
+            if (c == 'x') {
+                pos++;
+                return xValue;
+            }
+
+            // number (integer or floating)
+            if (Character.isDigit(c) || c == '.') {
+                int start = pos;
+                while (pos < len && (Character.isDigit(s.charAt(pos)) || s.charAt(pos) == '.')) pos++;
+                String num = s.substring(start, pos);
+                return Double.parseDouble(num);
+            }
+
+            throw new RuntimeException("Unexpected token at pos " + pos + ": '" + c + "'");
+        }
+
+        private void skipWhitespace() {
+            while (pos < len && Character.isWhitespace(s.charAt(pos))) pos++;
+        }
+
+        private char peek() {
+            if (pos >= len) return '\0';
+            return s.charAt(pos);
+        }
     }
 
-    public void newtonsContinue() {
-
-    }
+//    public static double replaceX(String expression, double x) {
+//        double result = 0;
+//
+//        // handle parentheses recursively
+//        while (expression.contains("(")) {
+//            int close = expression.indexOf(")");
+//            int open = expression.lastIndexOf("(", close);
+//            String inside = expression.substring(open + 1, close);
+//            double val = replaceX(inside, x); // recursion
+//            expression = expression.substring(0, open) + val + expression.substring(close + 1);
+//        }
+//
+//        // split by + (after normalizing - into +-)
+//        String expr = expression.replace("-", "+-");
+//        String[] terms = expr.split("\\+");
+//
+//        for (String term : terms) {
+//            if (term.isEmpty()) continue;
+//
+//            // Case 1: something like "ax^b"
+//            if (term.contains("x^")) {
+//                String[] parts = term.split("x\\^");
+//                int coeff = parts[0].isEmpty() || parts[0].equals("+") ? 1 :
+//                        parts[0].equals("-") ? -1 : Integer.parseInt(parts[0]);
+//                int power = Integer.parseInt(parts[1]);
+//                result += coeff * Math.pow(x, power);
+//
+//                // Case 2: plain "ax"
+//            } else if (term.contains("x")) {
+//                String coeffPart = term.replace("x", "");
+//                int coeff = coeffPart.isEmpty() || coeffPart.equals("+") ? 1 :
+//                        coeffPart.equals("-") ? -1 : Integer.parseInt(coeffPart);
+//                result += coeff * x;
+//
+//                // Case 3: number^power (e.g. "153.0^2")
+//            } else if (term.contains("^")) {
+//                String[] parts = term.split("\\^");
+//                double base = replaceX(parts[0], x);
+//                double power = replaceX(parts[1], x);
+//                result += Math.pow(base, power);
+//
+//                // Case 4: multiplication
+//            } else if (term.contains("*")) {
+//                String[] parts = term.split("\\*", 2);
+//                result += replaceX(parts[0], x) * replaceX(parts[1], x);
+//
+//                // Case 5: division
+//            } else if (term.contains("/")) {
+//                String[] parts = term.split("/", 2);
+//                result += replaceX(parts[0], x) / replaceX(parts[1], x);
+//
+//                // Case 6: plain number
+//            } else {
+//                result += Double.parseDouble(term);
+//            }
+//        }
+//        return result;
+//    }
 
 }
