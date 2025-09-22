@@ -4,10 +4,10 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter the a bound: ");
-        int a = scanner.nextInt();
+        double a = scanner.nextDouble();
         scanner.nextLine();
         System.out.print("Enter the b bound: ");
-        int b = scanner.nextInt();
+        double b = scanner.nextDouble();
         scanner.nextLine();
         System.out.print("Enter the accuracy: ");
         double accuracy = scanner.nextDouble();
@@ -24,14 +24,14 @@ class Expression {
     private String expresion;
     private String derivative;
     private String secondDerivative;
-    private int a;
-    private int b;
+    private double a;
+    private double b;
     private double accuracy;
     private String iterationalExp;
     private String derivativeIterationalExp;
 
 
-    public Expression(String expresion, String derivative, String secondDerivative, int a, int b, double accuracy, String iterationalExp, String derivativeIterationalExp) {
+    public Expression(String expresion, String derivative, String secondDerivative, double a, double b, double accuracy, String iterationalExp, String derivativeIterationalExp) {
         this.expresion = expresion;
         this.derivative = derivative;
         this.secondDerivative = secondDerivative;
@@ -66,7 +66,7 @@ class Expression {
         this.secondDerivative = secondDerivative;
     }
 
-    public int getA() {
+    public double getA() {
         return a;
     }
 
@@ -74,7 +74,7 @@ class Expression {
         this.a = a;
     }
 
-    public int getB() {
+    public double getB() {
         return b;
     }
 
@@ -101,16 +101,17 @@ class Methods {
             System.out.println("expression is null");
             return -1;
         }
-        System.out.println("The Chord Method: ");
+        System.out.println("\nThe Chord Method: ");
         double xn; //currentValueOfMovingPoint
         int counter = 0;
 
         double fafiia = replaceX(expression.getExpresion(), expression.getA()) * replaceX(expression.getSecondDerivative(), expression.getA());
         double fbfiib = replaceX(expression.getExpresion(), expression.getB()) * replaceX(expression.getSecondDerivative(), expression.getB());
-
+        //double xnminus1 = 0;
         if (fafiia > 0 && fbfiib < 0) {//moving point is b
             xn = expression.getB();
             while (replaceX(expression.getExpresion(), expression.getA()) * replaceX(expression.getExpresion(), xn) < 0) {
+                //xnminus1 = xn;
                 xn = xn - (((expression.getA() - xn) * (replaceX(expression.getExpresion(), xn))) / (replaceX(expression.getExpresion(), expression.getA()) - replaceX(expression.getExpresion(), xn)));
                 counter++;
                 System.out.println(xn);
@@ -127,16 +128,28 @@ class Methods {
             return -1;
         }
         System.out.println("Number of iterations by Chord method = " + counter);
-        calculateAccuracy(xn, expression.getAccuracy());
+        calculateAccuracyChord(xn, expression);
         return xn;
     }
+
+    public static void calculateAccuracyChord(double xn, Expression expression) {
+//        System.out.println(replaceX(expression.getExpresion(), xn));
+//        System.out.println(replaceX(expression.getDerivative(), xn));
+        double inAccurate = (replaceX(expression.getExpresion(), xn) / replaceX(expression.getDerivative(), xn));
+        if (inAccurate <= expression.getAccuracy()) {
+            System.out.println("Похибка: " + inAccurate + " точність збігається");
+        } else {
+            System.out.println("Точність не збігається");
+        }
+    }
+
 
     public static double newtonsMethod(Expression expression) {
         if (expression == null) {
             System.out.println("expression is null");
             return -1;
         }
-        System.out.println("The Newton's Method: ");
+        System.out.println("\nThe Newton's Method: ");
         double xn;
         int counter = 0;
 
@@ -159,7 +172,7 @@ class Methods {
             return -1;
         }
         System.out.println("Number of iterations by Newton's method = " + counter);
-        calculateAccuracy(xn, expression.getAccuracy());
+        calculateAccuracyNewton(xn, expression);
         return xn;
     }
 
@@ -169,12 +182,22 @@ class Methods {
         return result;
     }
 
+    public static void calculateAccuracyNewton(double xn, Expression expression) {
+        double inAccurate = Math.pow(replaceX(expression.getExpresion(), xn), 2)/2*(replaceX(expression.getSecondDerivative(), xn)/Math.pow(replaceX(expression.getDerivative(), xn), 3));
+        System.out.println(replaceX(expression.getExpresion(), xn));
+        if (inAccurate < expression.getAccuracy()) {
+            System.out.println("Похибка: " + inAccurate + " точність збігається");
+        } else {
+            System.out.println("Точність не збігається");
+        }
+    }
+
     public static double combinatedMethod(Expression expression) {
         if (expression == null) {
             System.out.println("expression is null");
             return -1;
         }
-        System.out.println("The Combinated Method: ");
+        System.out.println("\nThe Combinated Method: ");
         double an = expression.getA();
         double bn = expression.getB();
         int counter = 0;
@@ -200,7 +223,7 @@ class Methods {
             System.out.println("Moving point isn't detected");
             return -1;
         }
-        System.out.println("Number of iterations by Chord method = " + counter);
+        System.out.println("Number of iterations by Combinated method = " + counter);
         //calculateAccuracy(xn, expression.getAccuracy());
         return an;
     }
@@ -210,9 +233,10 @@ class Methods {
             System.out.println("expression is null");
             return -1;
         }
-        System.out.println("The Iterative Method: ");
+        System.out.println("\nThe Iterative Method: ");
 
-        double xnminus1;
+        double xnminus1 = 0;
+        double actualxnminus1 = -1;
         double xn = -1;
         int counter = 0;
 
@@ -226,18 +250,28 @@ class Methods {
             return -1;
         }
         do {
+            actualxnminus1 = xnminus1;
             xnminus1 = xn;
             xn = replaceX(expression.getIterationalExp(), xnminus1);
             counter++;
         } while (xnminus1 != xn);
 
-        System.out.println("Number of iterations by Newton's method = " + counter);
-        calculateAccuracy(xn, expression.getAccuracy());
+        System.out.println("Number of iterations by Iterations method = " + counter);
+        calculateAccuracyIteration(xn, actualxnminus1, expression);
         return xn;
     }
 
-    public static double calculateAccuracy(double value, double accuracy) {
-        return -1;
+    public static void calculateAccuracyIteration(double xn, double xnminus1, Expression expression) {
+        double r = replaceX(expression.getExpresion(), xn);
+        double inAccurate = (r * (xn-xnminus1))/(1-r);
+//        System.out.println(r);
+//        System.out.println(xn + "     " + xnminus1);
+//        System.out.println(inAccurate);
+        if (inAccurate < expression.getAccuracy()) {
+            System.out.println("Похибка: " + inAccurate + " точність збігається");
+        } else {
+            System.out.println("Точність не збігається");
+        }
     }
 
     public static double replaceX(String expression, double x) {
@@ -245,7 +279,6 @@ class Methods {
         return p.parse();
     }
 
-    // --- внутрішній рекурсивний парсер ---
     private static class Parser {
         private final String s;
         private final double xValue;
@@ -272,9 +305,13 @@ class Methods {
             while (true) {
                 skipWhitespace();
                 char c = peek();
-                if (c == '+') { pos++; value += parseTerm(); }
-                else if (c == '-') { pos++; value -= parseTerm(); }
-                else break;
+                if (c == '+') {
+                    pos++;
+                    value += parseTerm();
+                } else if (c == '-') {
+                    pos++;
+                    value -= parseTerm();
+                } else break;
             }
             return value;
         }
@@ -318,8 +355,14 @@ class Methods {
         private double parseUnary() {
             skipWhitespace();
             char c = peek();
-            if (c == '+') { pos++; return parseUnary(); }
-            if (c == '-') { pos++; return -parseUnary(); }
+            if (c == '+') {
+                pos++;
+                return parseUnary();
+            }
+            if (c == '-') {
+                pos++;
+                return -parseUnary();
+            }
             return parsePrimary();
         }
 
