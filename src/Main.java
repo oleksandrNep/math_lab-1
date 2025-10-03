@@ -118,8 +118,17 @@ class Methods {
             }
         } else if (fafiia < 0 && fbfiib > 0) {//moving point is a
             xn = expression.getA();
+            double xnminus1 = -100;
             while (replaceX(expression.getExpresion(), xn) * replaceX(expression.getExpresion(), expression.getB()) < 0) {
+                if (counter>=2){
+                    xnminus1 = xn;
+                }
                 xn = xn - (((expression.getB() - xn) * (replaceX(expression.getExpresion(), xn))) / (replaceX(expression.getExpresion(), expression.getB()) - replaceX(expression.getExpresion(), xn)));
+                if (xn==xnminus1){
+                    System.out.println("Number of iterations by Chord method = " + counter);
+                    calculateAccuracyChord(xn, expression);
+                    return xn;
+                }
                 counter++;
                 System.out.println(xn);
             }
@@ -255,6 +264,11 @@ class Methods {
             xn = replaceX(expression.getIterationalExp(), xnminus1);
             counter++;
         } while (xnminus1 != xn);
+
+        if (xn<expression.getA() || xn>expression.getB()){
+            System.out.println("moving point isn't found");
+            return -1;
+        }
 
         System.out.println("Number of iterations by Iterations method = " + counter);
         calculateAccuracyIteration(xn, actualxnminus1, expression);
